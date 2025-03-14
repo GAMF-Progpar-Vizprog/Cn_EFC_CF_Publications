@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
 using System.Linq;
@@ -50,6 +51,16 @@ namespace CnEFCF_Publications
 					(s,c)=>s+(s.Length>0?", ":"")+c.Name)+": "+a.Title);
 			Console.WriteLine();
 		}
+		private static void ShowArticlesOf(cnPublications cn, string v)
+		{
+			Console.WriteLine("Articles written by " + v);
+			foreach (var au in cn.Authors.Where(a => a.Name == v))
+			{
+				foreach (var ar in au.Articles)
+					Console.WriteLine(ar.Authors.Aggregate("", (s, c) => s + (s.Length > 0 ? ", " : "") + c.Name) + ": " + ar.Title);
+			}
+			Console.WriteLine();
+		}
 		static void Main(string[] args)
 		{
 			Console.WriteLine("EF Core Application");
@@ -57,19 +68,34 @@ namespace CnEFCF_Publications
 			{
 				SeedDB(cn);
 				ShowArticles(cn);
-				ShowArticlesOf(cn, "Jane Doe");
-				ShowArticlesOf(cn, "John Doe");
+				ShowArticlesOf(cn, "Jane Smith");
+				ShowArticlesOf(cn, "John Smith");
+		
+				DetachDb(cn);
 			}
+
 		}
 
-		private static void ShowArticlesOf(cnPublications cn, string v)
+		private static void DetachDb(cnPublications cn)
 		{
-			Console.WriteLine("Articles written by " + v);
-			foreach (var au in cn.Authors.Where(a => a.Name == v))
-			{ foreach(var ar in au.Articles)
-					Console.WriteLine(ar.Authors.Aggregate("",(s,c)=>s+(s.Length>0?", ":"")+c.Name)+": "+ar.Title);
+			cn.Database.OpenConnection();
+			var connection = cn.Database.GetDbConnection();
+			if (connection.State == System.Data.ConnectionState.Closed)
+			{	connection.Open();
 			}
-			Console.WriteLine();
+			string[] commands =
+			{	"USE master",
+				$"ALTER DATABASE [{connection.Database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE",
+				$"ALTER DATABASE [{connection.Database}] SET OFFLINE WITH ROLLBACK IMMEDIATE",
+				$"EXEC sp_detach_db '{connection.Database}'"
+			};
+			using (var sqlCommand = new SqlCommand())
+			{	sqlCommand.Connection = connection as SqlConnection;
+				foreach (string command in commands)
+				{	sqlCommand.CommandText = command;
+					sqlCommand.ExecuteNonQuery();
+				}
+			}
 		}
 	}
 }
