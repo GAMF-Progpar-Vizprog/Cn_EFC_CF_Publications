@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 
 
-namespace CnEFCF_Publications
+namespace Cn_EFC_CF_Publications
 {
 	class Program
 	{

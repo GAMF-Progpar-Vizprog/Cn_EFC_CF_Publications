@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
 
-namespace CnEFCF_Publications
+namespace Cn_EFC_CF_Publications
 {
 	public partial class cnPublications : DbContext
 	{

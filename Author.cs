@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CnEFCF_Publications
+namespace Cn_EFC_CF_Publications
 {
 	public class Author
 	{
